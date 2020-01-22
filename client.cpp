@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 
@@ -30,6 +31,7 @@ int main(int argc, char *argv[])
     const int MAXDATASIZE = 100; // max number of bytes we can get at once 
 
     int sockfd, numbytes;
+    int yes = 1;
 
     /*
     if (argc != 2) {
@@ -55,6 +57,13 @@ int main(int argc, char *argv[])
                 p->ai_protocol)) == -1) {
             perror("client: socket");
             continue;
+        }
+
+        // Disable Nagle's algorithm
+        if (setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, &yes,
+                sizeof(int)) == -1) {
+            perror("setsockopt");
+            exit(1);
         }
 
         if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {

@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 
@@ -29,7 +30,7 @@ int main(void)
     const int BACKLOG = 1; // how many pending connections queue will hold
 
     int sockfd;  // listen on sock_fd
-    int yes=1;
+    int yes = 1;
     int rv;
 
     struct addrinfo hints, *servinfo, *p;
@@ -52,6 +53,13 @@ int main(void)
         }
 
         if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes,
+                sizeof(int)) == -1) {
+            perror("setsockopt");
+            exit(1);
+        }
+
+        // Disable Nagle's algorithm
+        if (setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, &yes,
                 sizeof(int)) == -1) {
             perror("setsockopt");
             exit(1);

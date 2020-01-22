@@ -24,6 +24,24 @@ void *get_in_addr(struct sockaddr *sa)
     return &(((struct sockaddr_in*)sa)->sin_addr);
 }
 
+ssize_t send_all(int socket, const void *buffer, size_t length)
+{
+    ssize_t total = 0;          // how many bytes we've sent so far
+    ssize_t bytesleft = length; // how many we have left to send
+    ssize_t n;
+
+    while (total < length) {
+        n = send(socket, (char *) buffer + total, bytesleft, 0);
+        if (n == -1)
+            return -1;
+
+        total += n;
+        bytesleft -= n;
+    }
+
+    return total;   // return number actually sent here
+}
+
 int main(void)
 {
     const char *PORT = "3000";
@@ -106,7 +124,7 @@ int main(void)
                 s, sizeof(s));
         std::cout << "server: got connection from " << s << std::endl;
 
-        if (send(new_fd, "Hello, world!", 13, 0) == -1)
+        if (send_all(new_fd, "Hello, world!", 13) == -1)
             perror("send");
 
         close(new_fd);
